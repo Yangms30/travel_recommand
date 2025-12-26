@@ -3,15 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>트립지니어스 AI - 나만의 맞춤 여행 플래너</title>
+    <title>TripAI - AI 여행 추천</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
-      
-      body {
-        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2b8cee",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+              "sans": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
       }
-
+    </script>
+    <style>
       /* Custom Animations */
       @keyframes fadeInUp {
         from {
@@ -37,27 +54,16 @@
         animation: fadeIn 0.5s ease-out forwards;
       }
 
-      .animation-delay-200 {
-        animation-delay: 0.2s;
-      }
-      
-      .animation-delay-400 {
-        animation-delay: 0.4s;
-      }
-
       /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #f8fafc;
+        background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        background-color: #cbd5e1;
+        border-radius: 20px;
       }
     </style>
   <script type="importmap">
@@ -72,7 +78,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-teal-100 selection:text-teal-900">
+  <body class="font-display bg-background-light text-slate-900 antialiased selection:bg-primary/20 selection:text-primary">
     <div id="root"></div>
   </body>
 </html>

@@ -16,6 +16,7 @@ export interface TravelPreferences {
   companion: CompanionType;
   preferredDestination: string;
   specialRequests: string;
+  travelStyles?: string[];
 }
 
 export interface ItineraryActivity {

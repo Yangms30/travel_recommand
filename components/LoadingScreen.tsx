@@ -1,69 +1,122 @@
 import React, { useEffect, useState } from 'react';
-import { Plane, Search, Map, CheckCircle2 } from 'lucide-react';
 
 export const LoadingScreen: React.FC = () => {
-  const [stage, setStage] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("여행 스타일 분석 및 매칭 중...");
 
   useEffect(() => {
-    const intervals = [1000, 2500, 4500];
-    intervals.forEach((delay, index) => {
-      setTimeout(() => setStage(index + 1), delay);
-    });
+    // Simulate loading progress
+    const duration = 5000; // 5 seconds total
+    const intervalTime = 50;
+    const steps = duration / intervalTime;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      const newProgress = Math.min(100, Math.floor((currentStep / steps) * 100));
+      setProgress(newProgress);
+
+      // Update status text based on progress
+      if (newProgress < 30) {
+        setStatusText("여행 스타일 분석 및 매칭 중...");
+      } else if (newProgress < 60) {
+        setStatusText("항공권 및 현지 숙소 데이터 검색 중...");
+      } else if (newProgress < 85) {
+        setStatusText("최적의 이동 경로 계산 중...");
+      } else {
+        setStatusText("여행 일정 최종 정리 중...");
+      }
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+      }
+    }, intervalTime);
+
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <div className="relative w-32 h-32 mb-12">
-        <div className="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-        <div className="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
-        <Plane className="absolute inset-0 m-auto text-teal-500 w-10 h-10 animate-pulse" />
+    <div className="flex flex-col w-full max-w-[640px] items-center justify-center py-12 px-4 relative">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 opacity-10 pointer-events-none">
+        <span className="material-symbols-outlined text-9xl text-primary transform -rotate-12">flight_takeoff</span>
+      </div>
+      <div className="absolute bottom-0 right-0 opacity-10 pointer-events-none">
+        <span className="material-symbols-outlined text-9xl text-primary transform rotate-12">map</span>
       </div>
 
-      <h2 className="text-2xl font-bold text-slate-800 mb-8 animate-pulse">
-        AI 에이전트가 최적의 여행지를 찾는 중입니다...
-      </h2>
+      <div className="flex flex-col w-full flex-1 justify-center z-10">
+        {/* Central Visual */}
+        <div className="flex justify-center mb-10">
+          <div className="relative">
+            <div className="w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center relative animate-pulse">
+              {/* Inner circle suggesting pulsing radar */}
+              <div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center absolute">
+                <span className="material-symbols-outlined text-6xl text-primary">globe_asia</span>
+              </div>
+              {/* Orbiting dot static representation (could be animated with CSS if desired) */}
+              <div className="absolute top-2 right-8 w-3 h-3 bg-primary rounded-full shadow-lg shadow-blue-500/50"></div>
+            </div>
+            <div className="absolute -bottom-2 right-0 bg-white p-2 rounded-lg shadow-lg border border-slate-100 flex items-center gap-2 animate-bounce" style={{ animationDuration: '3s' }}>
+              <span className="material-symbols-outlined text-amber-500">light_mode</span>
+              <span className="text-xs font-bold text-slate-600">날씨 체크 중...</span>
+            </div>
+          </div>
+        </div>
 
-      <div className="w-full max-w-md space-y-4">
-        <AgentStep 
-          icon={<Search size={20} />} 
-          text="여행 취향 및 조건 분석 중" 
-          active={stage >= 0} 
-          completed={stage > 0} 
-        />
-        <AgentStep 
-          icon={<Map size={20} />} 
-          text="지도 API를 통해 최고의 여행지 탐색 중" 
-          active={stage >= 1} 
-          completed={stage > 1} 
-        />
-        <AgentStep 
-          icon={<Plane size={20} />} 
-          text="항공편 경로 및 가능 여부 확인 중" 
-          active={stage >= 2} 
-          completed={stage > 2} 
-        />
-        <AgentStep 
-          icon={<CheckCircle2 size={20} />} 
-          text="3가지 추천 여행 일정 확정 중" 
-          active={stage >= 3} 
-          completed={stage > 3} 
-        />
-      </div>
-      
-      <div className="mt-12 p-4 bg-blue-50 rounded-lg text-xs text-blue-600 max-w-lg text-center">
-        <p className="font-semibold mb-1">아키텍처 참고:</p>
-        <p>실제 서비스 환경에서는 이 단계에서 MCP(Model Context Protocol)를 사용하여 Google Flights, Booking.com, OpenWeatherMap API 등을 호출해 실시간 데이터를 가져옵니다.</p>
+        {/* Text Content */}
+        <div className="text-center mb-10">
+          <h1 className="text-slate-900 tracking-tight text-3xl md:text-4xl font-bold leading-tight px-4 pb-3">
+            AI가 최적의 여행지를<br />찾는 중입니다...
+          </h1>
+          <p className="text-slate-500 text-base md:text-lg font-normal leading-normal px-4">
+            고객님의 취향과 예산을 분석하여<br className="md:hidden" /> 가장 완벽한 여정을 계획하고 있습니다.
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="flex flex-col gap-3 p-4 w-full bg-white rounded-xl shadow-sm border border-slate-100">
+          <div className="flex gap-6 justify-between items-end">
+            <div className="flex flex-col gap-1">
+              <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Current Status</p>
+              <p className="text-slate-900 text-base font-semibold leading-normal flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-sm animate-spin">auto_awesome</span>
+                {statusText}
+              </p>
+            </div>
+            <p className="text-primary text-xl font-bold leading-normal">{progress}%</p>
+          </div>
+          <div className="rounded-full bg-slate-100 h-3 overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-primary relative transition-all duration-300 ease-out" 
+              style={{ width: `${progress}%` }}
+            >
+              <div 
+                className="absolute inset-0 bg-white/20 w-full h-full" 
+                style={{ 
+                  backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)', 
+                  backgroundSize: '1rem 1rem' 
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tip Card */}
+        <div className="mt-8 mx-4">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100 flex gap-4 items-start">
+            <div className="bg-white p-2 rounded-full shrink-0 shadow-sm text-amber-500 flex items-center justify-center">
+              <span className="material-symbols-outlined">lightbulb</span>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-1">여행 꿀팁</h4>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                비행기 티켓은 출발 6주 전에 예매하면 평균적으로 가장 저렴하다는 사실, 알고 계셨나요? AI가 최적의 가격대도 함께 확인해 드립니다.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
-const AgentStep = ({ icon, text, active, completed }: { icon: React.ReactNode, text: string, active: boolean, completed: boolean }) => (
-  <div className={`flex items-center p-3 rounded-lg transition-all duration-500 ${active ? 'opacity-100 translate-x-0' : 'opacity-30 -translate-x-4'}`}>
-    <div className={`mr-4 p-2 rounded-full ${completed ? 'bg-teal-100 text-teal-600' : 'bg-slate-100 text-slate-400'}`}>
-      {completed ? <CheckCircle2 size={20} /> : icon}
-    </div>
-    <span className={`font-medium ${completed ? 'text-teal-900' : 'text-slate-600'}`}>{text}</span>
-    {active && !completed && <span className="ml-auto text-xs font-bold text-teal-500 animate-bounce">진행중</span>}
-  </div>
-);

@@ -1,75 +1,139 @@
 import React from 'react';
-import { TripRecommendation } from '../types';
-import { ArrowRight, MapPin, DollarSign } from 'lucide-react';
+import { TripRecommendation, TravelPreferences } from '../types';
 
 interface Props {
   recommendations: TripRecommendation[];
   onSelect: (trip: TripRecommendation) => void;
   onBack: () => void;
+  prefs: TravelPreferences | null;
 }
 
-export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect, onBack }) => {
+export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect, onBack, prefs }) => {
+  // Helper to format date duration
+  const getDurationText = () => {
+    if (!prefs) return "3박 4일"; // Fallback
+    const start = new Date(prefs.startDate);
+    const end = new Date(prefs.endDate);
+    const diff = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return `${diff}박 ${diff + 1}일`;
+  };
+
+  const getBudgetText = () => {
+      if(!prefs) return "예산 미정";
+      // Format number to '200만원' style if KRW, else normal
+      if (prefs.currency === 'KRW') {
+          return `예산 ${(prefs.budgetPerPerson / 10000).toLocaleString()}만원`;
+      }
+      return `Budget ${prefs.budgetPerPerson} ${prefs.currency}`;
+  }
+
+  const getStyleTag = () => {
+      if (!prefs || !prefs.travelStyles || prefs.travelStyles.length === 0) return "자유 여행";
+      return `${prefs.travelStyles[0]} 여행`;
+  }
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800">당신을 위한 완벽한 여행지 3곳</h2>
-          <p className="text-slate-500 mt-2">여행지를 선택하여 상세 일정을 확인하세요.</p>
+    <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8 md:py-12">
+      {/* Page Heading & Context */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+            AI가 추천하는 당신만의 여행지
+          </h1>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <span className="material-symbols-outlined text-[16px]">calendar_month</span> {getDurationText()}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
+              <span className="material-symbols-outlined text-[16px]">spa</span> {getStyleTag()}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600">
+              <span className="material-symbols-outlined text-[16px]">attach_money</span> {getBudgetText()}
+            </span>
+          </div>
         </div>
-        <button onClick={onBack} className="text-slate-500 hover:text-slate-800 font-medium">
-          처음으로
+        
+        <button onClick={onBack} className="text-slate-500 hover:text-slate-900 font-medium text-sm flex items-center gap-1">
+            <span className="material-symbols-outlined text-[18px]">refresh</span> 조건 변경하기
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {recommendations.map((trip, idx) => (
-          <div 
-            key={trip.id} 
-            className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-slate-100 flex flex-col h-full"
-            onClick={() => onSelect(trip)}
-          >
-            <div className="h-48 bg-slate-200 relative">
-               <img 
-                 src={`https://picsum.photos/seed/${trip.destination}/600/400`} 
-                 alt={trip.destination}
-                 className="w-full h-full object-cover"
-               />
-               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-teal-700 uppercase tracking-wide">
-                 옵션 {idx + 1}
-               </div>
-            </div>
-            
-            <div className="p-6 flex-1 flex flex-col">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">{trip.destination}</h3>
-                  <div className="flex items-center text-slate-500 text-sm mt-1">
-                    <MapPin size={14} className="mr-1" />
-                    {trip.country}
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-1">
-                {trip.reasonForRecommendation}
-              </p>
-
-              <div className="mt-auto space-y-4">
-                <div className="flex items-center justify-between text-sm font-medium p-3 bg-slate-50 rounded-lg">
-                   <span className="text-slate-500">예상 비용</span>
-                   <span className="text-teal-700 flex items-center">
-                     <DollarSign size={14} className="mr-1" />
-                     {trip.estimatedTotalCost}
-                   </span>
-                </div>
-
-                <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-medium flex items-center justify-center group hover:bg-slate-800 transition">
-                  상세 일정 보기
-                  <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </div>
+      {/* AI Insight Message */}
+      <div className="mb-12 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-start">
+        <div className="shrink-0 relative">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+            <span className="material-symbols-outlined text-2xl">smart_toy</span>
           </div>
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+        </div>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-primary">Travel AI Agent</p>
+            <span className="text-xs text-slate-400">Just now</span>
+          </div>
+          <div className="text-slate-700 leading-relaxed text-sm md:text-base bg-slate-50 p-4 rounded-lg rounded-tl-none">
+             고객님의 취향과 예산을 분석하여 가장 적합한 여행지 세 곳을 선정했습니다. 
+             {recommendations.map((rec, i) => (
+                 <span key={i}>
+                    {i > 0 && ", "}
+                    <b>{rec.destination}</b>은(는) {rec.shortDescription}
+                 </span>
+             ))}
+             를 제공합니다. 각 카드의 '자세히 보기'를 클릭하여 상세 일정을 확인해보세요.
+          </div>
+        </div>
+      </div>
+
+      {/* Destination Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {recommendations.map((trip) => (
+            <div key={trip.id} className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 h-full cursor-pointer" onClick={() => onSelect(trip)}>
+                <div className="relative h-60 overflow-hidden">
+                    <img 
+                        src={`https://picsum.photos/seed/${trip.destination}/800/600`}
+                        alt={trip.destination}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 bg-white/90 backdrop-blur text-xs font-bold rounded-full text-slate-900 shadow-sm flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm text-blue-500">beach_access</span> 추천
+                        </span>
+                    </div>
+                </div>
+                
+                <div className="p-6 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">{trip.destination}</h3>
+                            <p className="text-sm text-slate-500">{trip.country}</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-xs font-medium text-slate-400">예산</span>
+                            <span className="text-sm font-bold text-slate-700">{trip.estimatedTotalCost}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="h-px bg-slate-100 my-4"></div>
+                    
+                    <div className="space-y-3 mb-6 flex-1">
+                        {trip.itinerary.slice(0, 3).map((day) => (
+                            <div key={day.day} className="flex gap-3 text-sm text-slate-600">
+                                <span className="w-12 shrink-0 font-semibold text-slate-400">Day {day.day}</span>
+                                <p className="line-clamp-1">{day.theme}</p>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-1 text-amber-500 text-sm font-medium">
+                            <span className="material-symbols-outlined text-[18px]">sunny</span> 맑음, 25°C
+                        </div>
+                        <button className="bg-primary hover:bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+                            자세히 보기 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         ))}
       </div>
     </div>
