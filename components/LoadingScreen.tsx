@@ -78,7 +78,7 @@ export const LoadingScreen: React.FC = () => {
         <div className="flex flex-col gap-3 p-4 w-full bg-white rounded-xl shadow-sm border border-slate-100">
           <div className="flex gap-6 justify-between items-end">
             <div className="flex flex-col gap-1">
-              <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Current Status</p>
+              <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">현재 진행 상황</p>
               <p className="text-slate-900 text-base font-semibold leading-normal flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-sm animate-spin">auto_awesome</span>
                 {statusText}

@@ -24,7 +24,7 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
       if (prefs.currency === 'KRW') {
           return `예산 ${(prefs.budgetPerPerson / 10000).toLocaleString()}만원`;
       }
-      return `Budget ${prefs.budgetPerPerson} ${prefs.currency}`;
+      return `예산 ${prefs.budgetPerPerson.toLocaleString()} ${prefs.currency}`;
   }
 
   const getStyleTag = () => {
@@ -68,8 +68,8 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
         </div>
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-primary">Travel AI Agent</p>
-            <span className="text-xs text-slate-400">Just now</span>
+            <p className="text-sm font-bold text-primary">여행 AI 비서</p>
+            <span className="text-xs text-slate-400">방금 전</span>
           </div>
           <div className="text-slate-700 leading-relaxed text-sm md:text-base bg-slate-50 p-4 rounded-lg rounded-tl-none">
              고객님의 취향과 예산을 분석하여 가장 적합한 여행지 세 곳을 선정했습니다. 
@@ -90,7 +90,7 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
             <div key={trip.id} className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 h-full cursor-pointer" onClick={() => onSelect(trip)}>
                 <div className="relative h-60 overflow-hidden">
                     <img 
-                        src={`https://picsum.photos/seed/${trip.destination}/800/600`}
+                        src={trip.imageUrl || `https://picsum.photos/seed/${trip.destination}/800/600`}
                         alt={trip.destination}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
@@ -118,7 +118,7 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
                     <div className="space-y-3 mb-6 flex-1">
                         {trip.itinerary.slice(0, 3).map((day) => (
                             <div key={day.day} className="flex gap-3 text-sm text-slate-600">
-                                <span className="w-12 shrink-0 font-semibold text-slate-400">Day {day.day}</span>
+                                <span className="w-12 shrink-0 font-semibold text-slate-400">{day.day}일차</span>
                                 <p className="line-clamp-1">{day.theme}</p>
                             </div>
                         ))}

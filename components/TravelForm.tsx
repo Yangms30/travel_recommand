@@ -112,6 +112,13 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
     return dateString > startDate && dateString < endDate;
   };
 
+  const isPastDate = (day: number) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date < today;
+  };
+
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth);
@@ -126,10 +133,13 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
     for (let i = 1; i <= daysInMonth; i++) {
       const selected = isSelected(i);
       const inRange = isInRange(i);
+      const past = isPastDate(i);
       
       let buttonClass = "h-9 w-9 mx-auto flex items-center justify-center text-sm rounded-full transition-all relative z-10 ";
       
-      if (selected) {
+      if (past) {
+        buttonClass += "text-slate-300 cursor-not-allowed ";
+      } else if (selected) {
         buttonClass += "bg-primary text-white font-bold shadow-md shadow-primary/30 ";
       } else if (inRange) {
         buttonClass += "bg-primary/10 text-slate-900 ";
@@ -143,7 +153,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
       
       days.push(
         <div key={i} className="relative h-10 w-full flex items-center justify-center">
-           {inRange && (
+           {inRange && !past && (
              <div className="absolute inset-y-0.5 left-0 right-0 bg-primary/10 z-0"></div>
            )}
            {/* Visual connectors for start/end to range */}
@@ -156,7 +166,8 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
            
           <button 
             type="button"
-            onClick={() => handleDateClick(i)}
+            onClick={() => !past && handleDateClick(i)}
+            disabled={past}
             className={buttonClass}
           >
             {i}
@@ -196,14 +207,14 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
       {/* Hero / Heading */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-6 border-b border-slate-200">
         <div className="flex flex-col gap-2 max-w-2xl">
-          <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-tight">Let's plan your perfect trip</h1>
+          <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-tight">완벽한 여행을 계획해보세요</h1>
           <p className="text-slate-500 text-lg font-normal leading-normal">
             AI가 당신만을 위한 최적의 여행 코스를 설계해 드립니다. <br className="hidden md:block"/>몇 가지 간단한 질문에 답하고 나만의 여정을 시작하세요.
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
           <span className="material-symbols-outlined text-lg text-primary">auto_awesome</span>
-          <span>AI Powered Planning</span>
+          <span>AI 기반 여행 플래너</span>
         </div>
       </div>
 
@@ -214,7 +225,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Destination Section */}
           <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h3 className="text-slate-900 text-xl font-bold leading-tight mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">location_on</span> Destination
+              <span className="material-symbols-outlined text-primary">location_on</span> 여행지
             </h3>
             <div className="flex flex-col gap-4">
               
@@ -236,7 +247,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 </span>
                 <input 
                   className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium transition-all ${isUndecided ? 'border-primary/50 bg-primary/5 text-primary' : 'border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
-                  placeholder="도시, 국가 또는 지역 검색 (예: Paris, Japan)" 
+                  placeholder="도시, 국가 또는 지역 검색 (예: 파리, 일본)" 
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
@@ -245,7 +256,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-1">Popular:</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-1">인기 여행지:</span>
                 {['서울', '제주도', '도쿄', '뉴욕', '파리'].map(city => (
                   <button 
                     key={city}
@@ -263,7 +274,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Dates Section (Calendar) */}
           <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h3 className="text-slate-900 text-xl font-bold leading-tight mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">calendar_month</span> Travel Dates
+              <span className="material-symbols-outlined text-primary">calendar_month</span> 여행 일정
             </h3>
             <div className="flex flex-col md:flex-row gap-6">
               {/* Calendar Grid */}
@@ -273,7 +284,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                     <span className="material-symbols-outlined text-sm">arrow_back_ios</span>
                   </button>
                   <span className="font-bold text-slate-900">
-                    {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    {currentMonth.toLocaleDateString('ko-KR', { month: 'long', year: 'numeric' })}
                   </span>
                   <button type="button" onClick={nextMonth} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
                     <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
@@ -281,8 +292,8 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 </div>
                 
                 <div className="grid grid-cols-7 gap-y-1 mb-2">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                    <div key={day} className="text-center text-xs font-bold text-slate-400 py-2">{day}</div>
+                  {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
+                    <div key={i} className="text-center text-xs font-bold text-slate-400 py-2">{day}</div>
                   ))}
                   {renderCalendarDays()}
                 </div>
@@ -296,7 +307,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                     onClick={() => { setStartDate(''); setEndDate(''); }}
                     className="text-xs text-primary font-bold hover:underline"
                   >
-                    Clear Dates
+                    날짜 초기화
                   </button>
                 </div>
               </div>
@@ -304,15 +315,15 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
               {/* Selected Dates Display */}
               <div className="flex flex-col justify-center gap-4 w-full md:w-auto min-w-[200px]">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Start Date</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">출발일</span>
                   <span className="text-lg font-bold text-slate-900 block truncate">
-                    {startDate ? formatDateDisplay(startDate) : "Select Date"}
+                    {startDate ? formatDateDisplay(startDate) : "날짜 선택"}
                   </span>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">End Date</span>
+                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">도착일</span>
                    <span className="text-lg font-bold text-slate-900 block truncate">
-                     {endDate ? formatDateDisplay(endDate) : "Select Date"}
+                     {endDate ? formatDateDisplay(endDate) : "날짜 선택"}
                    </span>
                 </div>
               </div>
@@ -322,7 +333,7 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Travelers & Companion Type */}
           <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h3 className="text-slate-900 text-xl font-bold leading-tight mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">groups</span> Travelers
+              <span className="material-symbols-outlined text-primary">groups</span> 여행 인원
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -331,10 +342,10 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 <label className="text-sm font-semibold text-slate-700">누구와 함께 하시나요?</label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { type: CompanionType.Solo, icon: 'person', label: 'Solo' },
-                    { type: CompanionType.Couple, icon: 'favorite', label: 'Couple' },
-                    { type: CompanionType.Family, icon: 'family_restroom', label: 'Family' },
-                    { type: CompanionType.Friends, icon: 'diversity_3', label: 'Friends' }
+                    { type: CompanionType.Solo, icon: 'person', label: '혼자' },
+                    { type: CompanionType.Couple, icon: 'favorite', label: '연인/부부' },
+                    { type: CompanionType.Family, icon: 'family_restroom', label: '가족' },
+                    { type: CompanionType.Friends, icon: 'diversity_3', label: '친구' }
                   ].map((item) => (
                     <label key={item.type} className="cursor-pointer group relative">
                       <input 
@@ -361,8 +372,8 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 {/* Adults */}
                 <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="flex flex-col">
-                    <span className="font-bold text-sm text-slate-900">Adults</span>
-                    <span className="text-xs text-slate-500">Age 13+</span>
+                    <span className="font-bold text-sm text-slate-900">성인</span>
+                    <span className="text-xs text-slate-500">만 13세 이상</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button 
@@ -387,8 +398,8 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 {/* Children */}
                 <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="flex flex-col">
-                    <span className="font-bold text-sm text-slate-900">Children</span>
-                    <span className="text-xs text-slate-500">Ages 2–12</span>
+                    <span className="font-bold text-sm text-slate-900">아동</span>
+                    <span className="text-xs text-slate-500">만 2세 ~ 12세</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button 
@@ -413,8 +424,8 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
                 {/* Pets */}
                 <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="flex flex-col">
-                    <span className="font-bold text-sm text-slate-900">Pets</span>
-                    <span className="text-xs text-slate-500">Service animals welcome</span>
+                    <span className="font-bold text-sm text-slate-900">반려동물</span>
+                    <span className="text-xs text-slate-500">함께 여행하는 반려동물</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button 
@@ -441,13 +452,13 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Preferences */}
           <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h3 className="text-slate-900 text-xl font-bold leading-tight mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">edit_note</span> Preferences
+              <span className="material-symbols-outlined text-primary">edit_note</span> 여행 취향
             </h3>
             <div className="flex flex-col gap-6">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-2 block">Travel Style</label>
+                <label className="text-sm font-semibold text-slate-700 mb-2 block">선호하는 여행 스타일</label>
                 <div className="flex flex-wrap gap-2">
-                  {['Relaxation', 'Adventure', 'Foodie', 'Culture', 'Shopping'].map(style => (
+                  {['휴식', '모험', '맛집 탐방', '문화/예술', '쇼핑'].map(style => (
                     <label key={style} className="cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -481,56 +492,29 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Budget Card */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h3 className="text-slate-900 text-lg font-bold leading-tight mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">payments</span> Budget Range
+              <span className="material-symbols-outlined text-primary">payments</span> 예산 범위
             </h3>
             <p className="text-sm text-slate-500 mb-6">항공편을 제외한 1인당 예상 예산입니다.</p>
             <div className="flex flex-col gap-6">
               <div className="relative pt-1">
-                <div className="flex mb-2 items-center justify-between">
-                  <div className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">Low</div>
-                  <div className="text-slate-900 font-bold text-lg">
-                    {budget.toLocaleString()} {currency}
-                  </div>
-                  <div className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">High</div>
+                <div className="relative">
+                  <input 
+                    type="text"
+                    value={budget.toLocaleString()}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setBudget(val ? parseInt(val) : 0);
+                    }}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold text-lg text-slate-900 pr-16 text-right"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">{currency}</span>
                 </div>
-                
-                <input 
-                  type="range" 
-                  min="100000" 
-                  max="5000000" 
-                  step="50000"
-                  value={budget}
-                  onChange={(e) => setBudget(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                />
               </div>
               
-              <div className="grid grid-cols-3 gap-2">
-                <button 
-                  type="button" 
-                  onClick={() => setBudget(500000)}
-                  className={`py-2 text-sm font-medium border rounded-lg transition-colors ${budget <= 500000 ? 'bg-primary text-white border-primary' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                >
-                  Budget
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setBudget(1500000)}
-                  className={`py-2 text-sm font-medium border rounded-lg transition-colors ${budget > 500000 && budget <= 2000000 ? 'bg-primary text-white border-primary' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                >
-                  Standard
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setBudget(3000000)}
-                  className={`py-2 text-sm font-medium border rounded-lg transition-colors ${budget > 2000000 ? 'bg-primary text-white border-primary' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                >
-                  Luxury
-                </button>
-              </div>
+
 
               <div className="mt-2">
-                 <label className="text-sm font-semibold text-slate-700 mb-1 block">Currency</label>
+                 <label className="text-sm font-semibold text-slate-700 mb-1 block">통화</label>
                  <select 
                    value={currency}
                    onChange={(e) => setCurrency(e.target.value)}
@@ -548,24 +532,24 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
           {/* Sticky Action Area */}
           <div className="sticky top-24 flex flex-col gap-4">
             <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
-              <h4 className="font-bold text-slate-900 mb-2">Trip Summary</h4>
+              <h4 className="font-bold text-slate-900 mb-2">여행 요약</h4>
               <ul className="space-y-3 text-sm">
                 <li className="flex justify-between">
-                  <span className="text-slate-500">Duration</span>
+                  <span className="text-slate-500">기간</span>
                   <span className="font-semibold text-slate-700">{getDurationString()}</span>
                 </li>
                 <li className="flex justify-between">
-                  <span className="text-slate-500">Travelers</span>
+                  <span className="text-slate-500">인원</span>
                   <span className="font-semibold text-slate-700">{adults + children}명 ({companion})</span>
                 </li>
                 {pets > 0 && (
                   <li className="flex justify-between">
-                    <span className="text-slate-500">Pets</span>
+                    <span className="text-slate-500">반려동물</span>
                     <span className="font-semibold text-slate-700">{pets}마리</span>
                   </li>
                 )}
                 <li className="flex justify-between">
-                  <span className="text-slate-500">Est. Budget</span>
+                  <span className="text-slate-500">예상 예산</span>
                   <span className="font-semibold text-primary">{budget.toLocaleString()} {currency}</span>
                 </li>
               </ul>
@@ -576,10 +560,10 @@ export const TravelForm: React.FC<Props> = ({ onSubmit, onBack }) => {
               className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold text-lg py-4 px-6 rounded-xl shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <span className="material-symbols-outlined">auto_awesome</span>
-              <span>Generate Plan</span>
+              <span>여행 일정 생성하기</span>
             </button>
             <p className="text-center text-xs text-slate-400 px-4">
-              By clicking Generate, you agree to our Terms of Service. AI results may vary.
+              AI가 생성한 일정은 참고용이며, 정확한 정보는 예약 시 반드시 다시 확인하시기 바랍니다.
             </p>
             
             {onBack && (

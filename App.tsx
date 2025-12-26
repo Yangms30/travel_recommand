@@ -4,7 +4,7 @@ import { TravelForm } from './components/TravelForm';
 import { LoadingScreen } from './components/LoadingScreen';
 import { RecommendationList } from './components/RecommendationList';
 import { ItineraryDetail } from './components/ItineraryDetail';
-import { generateTravelPlan } from './services/geminiService';
+import { recommendDestinations, recommendItinerary } from './services/api';
 import { TravelPreferences, TripRecommendation, AppStep } from './types';
 
 const App: React.FC = () => {
@@ -21,19 +21,41 @@ const App: React.FC = () => {
     setUserPrefs(prefs);
     setStep('LOADING');
     try {
-      const results = await generateTravelPlan(prefs);
+      const results = await recommendDestinations(prefs);
       setRecommendations(results);
       setStep('RESULTS');
     } catch (error) {
       console.error(error);
-      alert("일정을 생성하지 못했습니다. 다시 시도해 주세요.");
+      alert("여행지를 추천받지 못했습니다. 다시 시도해 주세요.");
       setStep('INPUT');
     }
   };
 
-  const handleTripSelect = (trip: TripRecommendation) => {
-    setSelectedTrip(trip);
-    setStep('DETAIL');
+  const handleTripSelect = async (trip: TripRecommendation) => {
+    if (!userPrefs) return;
+    
+    setStep('LOADING');
+    try {
+      // 이미 일정이 있다면 다시 요청하지 않음 (캐싱 효과)
+      if (trip.itinerary && trip.itinerary.length > 0) {
+        setSelectedTrip(trip);
+        setStep('DETAIL');
+        return;
+      }
+
+      const itinerary = await recommendItinerary(trip.destination, userPrefs);
+      const updatedTrip = { ...trip, itinerary };
+      
+      // 추천 목록 업데이트 (캐싱을 위해)
+      setRecommendations(prev => prev.map(r => r.id === trip.id ? updatedTrip : r));
+      
+      setSelectedTrip(updatedTrip);
+      setStep('DETAIL');
+    } catch (error) {
+      console.error(error);
+      alert("상세 일정을 불러오지 못했습니다. 다시 시도해 주세요.");
+      setStep('RESULTS');
+    }
   };
 
   const handleBackToResults = () => {

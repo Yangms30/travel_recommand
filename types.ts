@@ -41,6 +41,7 @@ export interface TripRecommendation {
   flightSuggestion: string;
   hotelSuggestion: string;
   itinerary: ItineraryDay[];
+  imageUrl?: string;
 }
 
 export type AppStep = 'LANDING' | 'INPUT' | 'LOADING' | 'RESULTS' | 'DETAIL';

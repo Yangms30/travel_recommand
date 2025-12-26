@@ -9,15 +9,22 @@ interface Props {
 
 export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
   
-  // Dynamic links
-  const flightLink = `https://www.skyscanner.co.kr/transport/flights-from/kr/?destination=${encodeURIComponent(trip.destination)}`;
-  const bookingLink = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.destination)}`;
-  const agodaLink = `https://www.agoda.com/search?text=${encodeURIComponent(trip.destination)}`;
+  // Helper for YYMMDD format
+  const toYYMMDD = (dateStr: string) => {
+    return dateStr.replace(/-/g, '').slice(2);
+  };
+
+  // Dynamic links with dates
+  // Skyscanner query format handles Korean city names better than path format
+  const flightLink = `https://www.skyscanner.co.kr/transport/flights?origin=ICN&destination=${encodeURIComponent(trip.destination)}&outboundDate=${toYYMMDD(prefs.startDate)}&inboundDate=${toYYMMDD(prefs.endDate)}`;
+  
+  const bookingLink = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.destination)}&checkin=${prefs.startDate}&checkout=${prefs.endDate}&group_adults=${prefs.travelers}`;
+  const agodaLink = `https://www.agoda.com/search?text=${encodeURIComponent(trip.destination)}&checkIn=${prefs.startDate}&checkOut=${prefs.endDate}&adults=${prefs.travelers}&rooms=1`;
 
   // Date formatting
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
   };
 
   const calculateDuration = () => {
@@ -40,14 +47,14 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
           className="self-start flex items-center text-slate-500 hover:text-primary font-medium transition-colors mb-2"
         >
           <span className="material-symbols-outlined mr-1 text-lg">arrow_back</span>
-          Back to Recommendations
+          추천 목록으로 돌아가기
         </button>
 
         {/* Page Heading & Meta */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="flex flex-col gap-3">
             <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em] text-slate-900">
-              Ready to Book Your Trip to {trip.destination}?
+              {trip.destination} 여행을 떠날 준비 되셨나요?
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-slate-500 text-sm md:text-base font-normal">
               <span className="flex items-center gap-1">
@@ -57,18 +64,18 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-lg">schedule</span> 
-                {duration} Days {duration + 1} Nights
+                {duration}박 {duration + 1}일
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-lg">group</span> 
-                {prefs.travelers} Travelers
+                여행자 {prefs.travelers}명
               </span>
             </div>
           </div>
           {/* Status Badge */}
           <div className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider self-start md:self-auto border border-amber-200">
-             Booking Pending
+             예약 대기 중
           </div>
         </div>
 
@@ -76,7 +83,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
         <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
           <span className="material-symbols-outlined text-primary mt-0.5">lightbulb</span>
           <div className="flex flex-col gap-1">
-            <h3 className="font-bold text-sm text-primary">AI Insight</h3>
+            <h3 className="font-bold text-sm text-primary">AI 여행 팁</h3>
             <p className="text-sm text-slate-700">
               {trip.flightSuggestion} {trip.reasonForRecommendation}
             </p>
@@ -88,14 +95,14 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
           <div className="flex flex-col gap-2 rounded-xl p-6 bg-white border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 text-slate-500">
               <span className="material-symbols-outlined">payments</span>
-              <p className="text-sm font-medium uppercase tracking-wider">Est. Total Budget</p>
+              <p className="text-sm font-medium uppercase tracking-wider">예상 총 경비</p>
             </div>
             <p className="text-2xl font-bold leading-tight text-slate-900">{trip.estimatedTotalCost}</p>
           </div>
           <div className="flex flex-col gap-2 rounded-xl p-6 bg-white border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 text-slate-500">
               <span className="material-symbols-outlined">bed</span>
-              <p className="text-sm font-medium uppercase tracking-wider">Hotel Recommendation</p>
+              <p className="text-sm font-medium uppercase tracking-wider">추천 숙소</p>
             </div>
             <p className="text-lg font-bold leading-tight text-slate-900 line-clamp-2">{trip.hotelSuggestion}</p>
           </div>
@@ -103,7 +110,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
 
         {/* Booking Cards Section */}
         <div className="flex flex-col gap-6">
-          <h2 className="text-xl font-bold text-slate-900">Booking Logistics</h2>
+          <h2 className="text-xl font-bold text-slate-900">예약 정보</h2>
           
           {/* Flight Card */}
           <div className="flex flex-col lg:flex-row items-stretch overflow-hidden rounded-xl bg-white shadow-sm border border-slate-200">
@@ -120,9 +127,9 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-bold uppercase">Round Trip</span>
+                      <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-bold uppercase">왕복</span>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">Seoul (ICN) <span className="text-slate-400 mx-1">↔</span> {trip.destination}</h3>
+                    <h3 className="text-lg font-bold text-slate-900">서울 (ICN) <span className="text-slate-400 mx-1">↔</span> {trip.destination}</h3>
                   </div>
                   <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                     <span className="material-symbols-outlined">airplane_ticket</span>
@@ -130,11 +137,11 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 font-medium uppercase">Departure</span>
+                    <span className="text-xs text-slate-500 font-medium uppercase">가는 날</span>
                     <span className="text-sm font-semibold text-slate-900">{formatDate(prefs.startDate)}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 font-medium uppercase">Return</span>
+                    <span className="text-xs text-slate-500 font-medium uppercase">오는 날</span>
                     <span className="text-sm font-semibold text-slate-900">{formatDate(prefs.endDate)}</span>
                   </div>
                 </div>
@@ -146,7 +153,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto cursor-pointer group flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-blue-600 text-white px-6 py-3 font-medium transition-all shadow-md hover:shadow-lg"
                 >
-                  <span>Search on Skyscanner</span>
+                  <span>스카이스캐너 검색</span>
                   <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">open_in_new</span>
                 </a>
               </div>
@@ -157,7 +164,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
           <div className="flex flex-col lg:flex-row items-stretch overflow-hidden rounded-xl bg-white shadow-sm border border-slate-200">
             <div className="w-full lg:w-1/3 bg-center bg-no-repeat bg-cover min-h-[200px] lg:min-h-auto relative">
                 <img 
-                 src={`https://picsum.photos/seed/${trip.destination}hotel/800/600`}
+                 src={trip.imageUrl || `https://picsum.photos/seed/${trip.destination}hotel/800/600`}
                  alt="Hotel room" 
                  className="absolute inset-0 w-full h-full object-cover"
                />
@@ -168,9 +175,9 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-xs font-bold uppercase">Accommodation</span>
+                      <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-xs font-bold uppercase">숙소</span>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">{trip.destination} Stays</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{trip.destination} 숙소</h3>
                   </div>
                   <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                     <span className="material-symbols-outlined">hotel</span>
@@ -181,8 +188,8 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                     {trip.hotelSuggestion}
                   </p>
                   <div className="flex items-center gap-4 text-sm mt-1 text-slate-600">
-                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-base text-primary">nights_stay</span> {duration} Nights</span>
-                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-base text-primary">person</span> {prefs.travelers} Guests</span>
+                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-base text-primary">nights_stay</span> {duration}박</span>
+                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-base text-primary">person</span> {prefs.travelers}명</span>
                   </div>
                 </div>
               </div>
@@ -215,9 +222,9 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
         {/* Itinerary Snapshot */}
         <div className="flex flex-col gap-4 mt-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-900">Itinerary Snapshot</h2>
+            <h2 className="text-xl font-bold text-slate-900">일정 요약</h2>
             <button className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
-              View Full Details <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              전체 일정 보기 <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
           
@@ -226,7 +233,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
               // Calculate specific date for this day
               const date = new Date(prefs.startDate);
               date.setDate(date.getDate() + (day.day - 1));
-              const dateDisplay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const dateDisplay = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
               
               // Colors for the timeline dots
               const dotColor = index === 0 ? 'bg-primary' : 'bg-slate-300';
@@ -235,7 +242,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                 <div key={day.day} className="relative">
                   <div className={`absolute -left-[23px] top-1 h-3 w-3 rounded-full ${dotColor} ring-4 ring-white`}></div>
                   <div className="flex flex-col gap-2">
-                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wide">Day {day.day} • {dateDisplay}</h4>
+                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wide">{day.day}일차 • {dateDisplay}</h4>
                     <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                       <p className="font-bold text-slate-900 text-lg mb-2">{day.theme}</p>
                       <ul className="space-y-2">
