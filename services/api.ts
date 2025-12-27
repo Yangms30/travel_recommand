@@ -34,7 +34,7 @@ export const recommendDestinations = async (prefs: TravelPreferences): Promise<T
   }
 };
 
-export const recommendItinerary = async (destination: string, prefs: TravelPreferences): Promise<ItineraryDay[]> => {
+export const recommendItinerary = async (destination: string, prefs: TravelPreferences): Promise<{ itinerary: ItineraryDay[], attractions: any[] }> => {
   try {
     const response = await fetch(`${API_BASE_URL}/recommend/itinerary`, {
       method: "POST",
@@ -53,7 +53,10 @@ export const recommendItinerary = async (destination: string, prefs: TravelPrefe
     }
 
     const data = await response.json();
-    return data.itinerary;
+    return { 
+        itinerary: data.itinerary, 
+        attractions: data.attractions || [] 
+    };
   } catch (error) {
     console.error("Error fetching itinerary:", error);
     throw error;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { TripRecommendation, TravelPreferences } from '../types';
+import toast from 'react-hot-toast';
 
 interface Props {
   trip: TripRecommendation;
@@ -36,6 +37,18 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
   };
 
   const duration = calculateDuration();
+
+  const [currentAttractionIndex, setCurrentAttractionIndex] = React.useState(0);
+
+  const nextAttraction = () => {
+    if (!trip.attractions) return;
+    setCurrentAttractionIndex((prev) => (prev + 1) % trip.attractions!.length);
+  };
+
+  const prevAttraction = () => {
+    if (!trip.attractions) return;
+    setCurrentAttractionIndex((prev) => (prev - 1 + trip.attractions!.length) % trip.attractions!.length);
+  };
 
   return (
     <div className="w-full flex flex-col items-center py-4 md:py-8 w-full">
@@ -107,6 +120,54 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
             <p className="text-lg font-bold leading-tight text-slate-900 line-clamp-2">{trip.hotelSuggestion}</p>
           </div>
         </div>
+
+        {/* Major Attractions Carousel */}
+        {trip.attractions && trip.attractions.length > 0 && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">놓치면 후회할 주요 명소</h2>
+              <div className="flex gap-2">
+                <button 
+                  onClick={prevAttraction}
+                  className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-lg">chevron_left</span>
+                </button>
+                <button 
+                  onClick={nextAttraction}
+                  className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-lg">chevron_right</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-xl bg-white shadow-sm border border-slate-200">
+              <div className="flex flex-col md:flex-row">
+                <div className="w-full md:w-1/2 aspect-video md:aspect-auto md:h-[300px] relative overflow-hidden">
+                   <img 
+                     key={currentAttractionIndex} // Force re-render for animation
+                     src={trip.attractions[currentAttractionIndex].imageUrl || `https://picsum.photos/seed/${trip.attractions[currentAttractionIndex].name}/800/600`} 
+                     alt={trip.attractions[currentAttractionIndex].name}
+                     className="absolute inset-0 w-full h-full object-cover animate-fade-in"
+                   />
+                </div>
+                <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center gap-4">
+                  <div className="flex items-center gap-2 text-sm text-primary font-bold uppercase tracking-wider">
+                    <span className="px-2 py-0.5 bg-primary/10 rounded">MUST VISIT</span>
+                    <span>{currentAttractionIndex + 1} / {trip.attractions.length}</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 animate-fade-in">
+                    {trip.attractions[currentAttractionIndex].name}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed animate-fade-in">
+                    {trip.attractions[currentAttractionIndex].description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Booking Cards Section */}
         <div className="flex flex-col gap-6">
@@ -223,7 +284,10 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
         <div className="flex flex-col gap-4 mt-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900">일정 요약</h2>
-            <button className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+            <button 
+              onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })}
+              className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
+            >
               전체 일정 보기 <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>

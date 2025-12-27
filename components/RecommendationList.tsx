@@ -59,28 +59,41 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
       </div>
 
       {/* AI Insight Message */}
-      <div className="mb-12 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-start">
-        <div className="shrink-0 relative">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-            <span className="material-symbols-outlined text-2xl">smart_toy</span>
+      <div className="mb-12 bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row gap-6">
+        <div className="shrink-0 flex flex-col items-center gap-3 md:w-48">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+            <span className="material-symbols-outlined text-3xl">smart_toy</span>
           </div>
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+          <div className="text-center">
+            <p className="font-bold text-slate-900">AI 여행 비서</p>
+            <p className="text-xs text-slate-500 mt-1">맞춤형 분석 완료</p>
+          </div>
         </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-primary">여행 AI 비서</p>
-            <span className="text-xs text-slate-400">방금 전</span>
-          </div>
-          <div className="text-slate-700 leading-relaxed text-sm md:text-base bg-slate-50 p-4 rounded-lg rounded-tl-none">
-             고객님의 취향과 예산을 분석하여 가장 적합한 여행지 세 곳을 선정했습니다. 
-             {recommendations.map((rec, i) => (
-                 <span key={i}>
-                    {i > 0 && ", "}
-                    <b>{rec.destination}</b>은(는) {rec.shortDescription}
-                 </span>
-             ))}
-             를 제공합니다. 각 카드의 '자세히 보기'를 클릭하여 상세 일정을 확인해보세요.
-          </div>
+        
+        <div className="flex-1 bg-slate-50 rounded-xl p-5 md:p-6 border border-slate-100 relative">
+          <div className="absolute top-6 left-0 w-3 h-3 bg-slate-50 transform -translate-x-1/2 rotate-45 border-l border-b border-slate-100 hidden md:block"></div>
+          
+          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">auto_awesome</span>
+            고객님을 위한 추천 포인트
+          </h3>
+          
+          <ul className="space-y-3">
+            {recommendations.map((rec, i) => (
+              <li key={i} className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-bold shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <div>
+                  <span className="font-bold text-slate-900 mr-2">{rec.destination}</span>
+                  <span className="text-slate-600 text-sm leading-relaxed">{rec.shortDescription}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-slate-400 mt-4 text-right">
+            * 각 카드를 클릭하여 상세 일정과 예산을 확인하세요.
+          </p>
         </div>
       </div>
 
@@ -126,7 +139,7 @@ export const RecommendationList: React.FC<Props> = ({ recommendations, onSelect,
                     
                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
                         <div className="flex items-center gap-1 text-amber-500 text-sm font-medium">
-                            <span className="material-symbols-outlined text-[18px]">sunny</span> 맑음, 25°C
+                            <span className="material-symbols-outlined text-[18px]">sunny</span> {trip.weather || "날씨 정보 없음"}
                         </div>
                         <button className="bg-primary hover:bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2">
                             자세히 보기 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

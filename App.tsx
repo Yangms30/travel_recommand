@@ -6,6 +6,7 @@ import { RecommendationList } from './components/RecommendationList';
 import { ItineraryDetail } from './components/ItineraryDetail';
 import { recommendDestinations, recommendItinerary } from './services/api';
 import { TravelPreferences, TripRecommendation, AppStep } from './types';
+import toast, { Toaster } from 'react-hot-toast';
 
 const App: React.FC = () => {
   const [step, setStep] = useState<AppStep>('LANDING');
@@ -26,7 +27,7 @@ const App: React.FC = () => {
       setStep('RESULTS');
     } catch (error) {
       console.error(error);
-      alert("여행지를 추천받지 못했습니다. 다시 시도해 주세요.");
+      toast.error("여행지를 추천받지 못했습니다. 잠시 후 다시 시도해 주세요.");
       setStep('INPUT');
     }
   };
@@ -43,8 +44,8 @@ const App: React.FC = () => {
         return;
       }
 
-      const itinerary = await recommendItinerary(trip.destination, userPrefs);
-      const updatedTrip = { ...trip, itinerary };
+      const { itinerary, attractions } = await recommendItinerary(trip.destination, userPrefs);
+      const updatedTrip = { ...trip, itinerary, attractions };
       
       // 추천 목록 업데이트 (캐싱을 위해)
       setRecommendations(prev => prev.map(r => r.id === trip.id ? updatedTrip : r));
@@ -53,7 +54,7 @@ const App: React.FC = () => {
       setStep('DETAIL');
     } catch (error) {
       console.error(error);
-      alert("상세 일정을 불러오지 못했습니다. 다시 시도해 주세요.");
+      toast.error("상세 일정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
       setStep('RESULTS');
     }
   };
@@ -77,6 +78,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden font-display bg-background-light text-slate-900">
+      <Toaster position="top-center" reverseOrder={false} />
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4 sm:px-10 lg:px-40 max-w-[1440px] mx-auto">
@@ -88,9 +90,9 @@ const App: React.FC = () => {
           </button>
           <div className="flex items-center gap-8">
             <nav className="hidden md:flex items-center gap-8">
-              <button onClick={handleGoToLanding} className="text-sm font-medium hover:text-primary transition-colors">소개</button>
-              <button className="text-sm font-medium hover:text-primary transition-colors">기능</button>
-              <button className="text-sm font-medium hover:text-primary transition-colors">로그인</button>
+              <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm font-medium hover:text-primary transition-colors">소개</button>
+              <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm font-medium hover:text-primary transition-colors">기능</button>
+              <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm font-medium hover:text-primary transition-colors">로그인</button>
             </nav>
             {step === 'LANDING' ? (
               <button onClick={handleStart} className="flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-primary/90 transition-colors">
@@ -155,9 +157,9 @@ const App: React.FC = () => {
             <span className="text-sm font-bold text-slate-900">TripAI</span>
           </div>
           <div className="flex gap-6">
-            <a className="text-sm text-slate-500 hover:text-primary" href="#">서비스 이용약관</a>
-            <a className="text-sm text-slate-500 hover:text-primary" href="#">개인정보 처리방침</a>
-            <a className="text-sm text-slate-500 hover:text-primary" href="#">고객센터</a>
+            <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm text-slate-500 hover:text-primary">서비스 이용약관</button>
+            <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm text-slate-500 hover:text-primary">개인정보 처리방침</button>
+            <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm text-slate-500 hover:text-primary">고객센터</button>
           </div>
           <div className="text-sm text-slate-400">
              © 2024 TripAI. All rights reserved.

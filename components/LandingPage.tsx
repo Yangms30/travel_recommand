@@ -1,4 +1,5 @@
 import React from 'react';
+import toast from 'react-hot-toast';
 
 interface Props {
   onStart: () => void;
@@ -31,7 +32,7 @@ export const LandingPage: React.FC<Props> = ({ onStart }) => {
                   className="h-12 sm:h-14 px-8 rounded-full bg-primary text-white text-base sm:text-lg font-bold hover:bg-primary/90 hover:scale-105 transition-all shadow-lg hover:shadow-primary/30 flex items-center justify-center gap-2"
                 >
                   <span className="material-symbols-outlined">auto_awesome</span>
-                  <span>무료로 여행 일정 받기</span>
+                  <span>여행 일정 받기</span>
                 </button>
               </div>
             </div>
@@ -47,7 +48,7 @@ export const LandingPage: React.FC<Props> = ({ onStart }) => {
               왜 <span className="text-primary">TripAI</span>인가요?
             </h2>
             <p className="text-lg text-slate-500 max-w-2xl">
-              여행 준비의 시작부터 끝까지, 최첨단 인공지능이 당신의 완벽한 가이드가 되어드립니다.
+              여행 준비의 시작부터 끝까지,여행 전문가 AI가 당신에게 완벽한 여행 일정을 제안해드립니다.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -91,7 +92,10 @@ export const LandingPage: React.FC<Props> = ({ onStart }) => {
                 >
                   여행 추천 시작하기
                 </button>
-                <button className="h-12 w-full min-w-[200px] max-w-xs rounded-lg border border-slate-600 bg-transparent px-8 text-base font-bold text-white transition-colors hover:bg-white/10 sm:w-auto">
+                <button 
+                  onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })}
+                  className="h-12 w-full min-w-[200px] max-w-xs rounded-lg border border-slate-600 bg-transparent px-8 text-base font-bold text-white transition-colors hover:bg-white/10 sm:w-auto"
+                >
                   더 알아보기
                 </button>
               </div>

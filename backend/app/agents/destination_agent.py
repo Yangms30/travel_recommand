@@ -7,6 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from langchain_community.tools.tavily_search import TavilySearchResults
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ class Recommendation(BaseModel):
     flightSuggestion: str = Field(description="항공편 제안")
     hotelSuggestion: str = Field(description="숙소 제안")
     imageUrl: str = Field(description="여행지 이미지 URL", default="")
+    weather: str = Field(description="날씨 정보", default="")
 
 class RecommendationsOutput(BaseModel):
     recommendations: List[Recommendation]
@@ -27,10 +29,14 @@ class RecommendationsOutput(BaseModel):
 # 상태 정의
 class DestinationState(TypedDict):
     user_input: dict
+    research_data: str
     recommendations: List[dict]
 
 # LLM 설정
 llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+
+# 도구 설정
+tavily_tool = TavilySearchResults(max_results=3)
 
 # 파서 설정
 parser = JsonOutputParser(pydantic_object=RecommendationsOutput)
@@ -38,27 +44,58 @@ parser = JsonOutputParser(pydantic_object=RecommendationsOutput)
 # 프롬프트 템플릿
 prompt = PromptTemplate(
     template="""You are a professional travel consultant.
-    Recommend 3 travel destinations based on the following user preferences:
+    Recommend 3 travel destinations based on the following user preferences and research data:
+    
+    [User Preferences]
     {user_input}
+    
+    [Research Data (Trends & Safety)]
+    {research_data}
+    
+    Important Constraints:
+    1. **RESPECT THE PREFERRED DESTINATION**: If the user has specified a 'preferredDestination' (e.g., 'Tokyo') in the preferences:
+       - You MUST ONLY recommend destinations that are either the specified city itself or very close variations (e.g., 'Tokyo City Center', 'Tokyo & Yokohama', 'Tokyo & Hakone').
+       - DO NOT recommend completely different countries or cities (e.g., if user says 'Tokyo', do NOT recommend 'Seoul' or 'Paris').
+       - Provide 3 distinct options focused on that specific destination (e.g., different themes like 'Foodie Trip', 'Cultural Exploration', 'Relaxing Getaway' within the same city).
+    
+    2. **DURATION CHECK**: 
+       - If the trip duration is short (e.g., 3-4 days), focus on a single city or immediate surroundings. Do not suggest multi-city hops that require long travel times.
+       - If the trip duration is long (e.g., 7+ days), you may suggest multi-city itineraries (e.g., 'Tokyo & Kyoto').
+    
+    3. **General Rules**:
+       - For multi-city trips, set 'destination' as the route name (e.g., "London & Paris").
+       - Use the research data to recommend trending or safe spots within the constraints.
     
     Return the result strictly in the following JSON format.
     {format_instructions}
     
     Ensure all text fields are in Korean.
+    IMPORTANT: Output ONLY the JSON object. Do not use markdown code blocks (e.g., ```json). Do not add any introductory or concluding text.
     """,
-    input_variables=["user_input"],
+    input_variables=["user_input", "research_data"],
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )
 
+def get_primary_city(destination: str) -> str:
+    # "Paris & London", "Osaka -> Kyoto", "Paris, France" 등에서 첫 번째 주요 도시 추출
+    separators = ["&", "->", ",", "+", " and ", " - "]
+    primary = destination
+    for sep in separators:
+        if sep in primary:
+            primary = primary.split(sep)[0]
+    return primary.strip()
+
 def fetch_destination_image(destination: str) -> str:
     access_key = os.getenv("UNSPLASH_ACCESS_KEY")
-    if not access_key:
-        return f"https://picsum.photos/seed/{destination}/800/600"
+    query_city = get_primary_city(destination)
     
-    # 한글 검색어일 경우 정확도가 떨어질 수 있으므로 영문으로 변환하거나 그대로 시도
-    # 여기서는 그대로 시도하되, 필요시 LLM에게 영문명을 요청할 수도 있음.
-    # 일단 간단하게 구현
-    url = f"https://api.unsplash.com/search/photos?query={destination}&per_page=1&client_id={access_key}&orientation=landscape"
+    # 검색어 구체화: "Tokyo travel landmark" 등으로 검색하여 인물 사진 제외
+    search_query = f"{query_city} travel landmark scenery"
+    
+    if not access_key:
+        return f"https://picsum.photos/seed/{query_city}/800/600"
+    
+    url = f"https://api.unsplash.com/search/photos?query={search_query}&per_page=1&client_id={access_key}&orientation=landscape"
     try:
         response = requests.get(url, timeout=5)
         if response.status_code == 200:
@@ -68,19 +105,66 @@ def fetch_destination_image(destination: str) -> str:
     except Exception as e:
         print(f"Error fetching image for {destination}: {e}")
     
-    return f"https://picsum.photos/seed/{destination}/800/600"
+    return f"https://picsum.photos/seed/{query_city}/800/600"
+
+def fetch_weather_info(destination: str) -> str:
+    api_key = os.getenv("OPENWEATHER_API_KEY")
+    if not api_key:
+        return "날씨 정보 없음"
+    
+    query_city = get_primary_city(destination)
+        
+    # 1. 도시 좌표(위도/경도) 가져오기
+    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={query_city}&limit=1&appid={api_key}"
+    try:
+        geo_res = requests.get(geo_url, timeout=5)
+        if geo_res.status_code == 200 and geo_res.json():
+            lat = geo_res.json()[0]['lat']
+            lon = geo_res.json()[0]['lon']
+            
+            # 2. 현재 날씨 가져오기 (섭씨)
+            weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric&lang=kr"
+            weather_res = requests.get(weather_url, timeout=5)
+            if weather_res.status_code == 200:
+                data = weather_res.json()
+                temp = round(data['main']['temp'])
+                desc = data['weather'][0]['description']
+                return f"{desc}, {temp}°C"
+    except Exception as e:
+        print(f"Error fetching weather for {destination}: {e}")
+        
+    return "날씨 정보 없음"
 
 # 노드 함수 정의
+def research_destinations(state: DestinationState):
+    user_input = state["user_input"]
+    # 사용자 입력을 바탕으로 검색 쿼리 생성 (간단히 구현)
+    # 실제로는 LLM을 이용해 쿼리를 생성하는 것이 더 좋음
+    query = f"best travel destinations for {user_input.get('travelers', 'travelers')} in {user_input.get('startDate', 'upcoming months')} style {user_input.get('travelStyles', 'general')}"
+    
+    try:
+        results = tavily_tool.invoke({"query": query})
+        # 결과 요약
+        research_summary = "\n".join([f"- {r['content']}" for r in results])
+    except Exception as e:
+        print(f"Error searching destinations: {e}")
+        research_summary = "No research data available."
+        
+    return {"research_data": research_summary}
+
 def generate_recommendations(state: DestinationState):
     user_input = state["user_input"]
+    research_data = state.get("research_data", "")
+    
     chain = prompt | llm | parser
     try:
-        response = chain.invoke({"user_input": user_input})
+        response = chain.invoke({"user_input": user_input, "research_data": research_data})
         recommendations = response['recommendations']
         
-        # 이미지 URL 추가
+        # 이미지 및 날씨 URL 추가
         for rec in recommendations:
             rec['imageUrl'] = fetch_destination_image(rec['destination'])
+            rec['weather'] = fetch_weather_info(rec['destination'])
             
         return {"recommendations": recommendations}
     except Exception as e:
@@ -89,8 +173,11 @@ def generate_recommendations(state: DestinationState):
 
 # 그래프 구성
 workflow = StateGraph(DestinationState)
+workflow.add_node("research_destinations", research_destinations)
 workflow.add_node("generate_recommendations", generate_recommendations)
-workflow.set_entry_point("generate_recommendations")
+
+workflow.set_entry_point("research_destinations")
+workflow.add_edge("research_destinations", "generate_recommendations")
 workflow.add_edge("generate_recommendations", END)
 
 destination_graph = workflow.compile()
