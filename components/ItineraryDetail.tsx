@@ -319,6 +319,34 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                           </li>
                         ))}
                       </ul>
+                      
+                      {day.meals && day.meals.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-slate-100">
+                          <h5 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-base text-orange-500">restaurant</span>
+                            추천 맛집
+                          </h5>
+                          <ul className="space-y-2">
+                            {day.meals.map((meal, mIndex) => (
+                              <li key={mIndex} className="bg-slate-50 p-3 rounded-md flex justify-between items-start gap-2 group hover:bg-orange-50 transition-colors">
+                                <div>
+                                  <p className="font-semibold text-slate-800 text-sm group-hover:text-orange-700 transition-colors">{meal.name}</p>
+                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">{meal.description}</p>
+                                </div>
+                                <a 
+                                  href={meal.google_maps_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+                                  title="Google Maps에서 보기"
+                                >
+                                  <span className="material-symbols-outlined text-lg">map</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

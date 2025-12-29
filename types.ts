@@ -25,10 +25,17 @@ export interface ItineraryActivity {
   description: string;
 }
 
+export interface Meal {
+  name: string;
+  description: string;
+  google_maps_link: string;
+}
+
 export interface ItineraryDay {
   day: number;
   theme: string;
   activities: ItineraryActivity[];
+  meals?: Meal[];
 }
 
 export interface TripRecommendation {

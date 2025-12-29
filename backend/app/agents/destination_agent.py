@@ -7,7 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilySearch
 
 load_dotenv()
 
@@ -33,45 +33,32 @@ class DestinationState(TypedDict):
     recommendations: List[dict]
 
 # LLM 설정
-llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
 
 # 도구 설정
-tavily_tool = TavilySearchResults(max_results=3)
+tavily_tool = TavilySearch(max_results=2)
 
 # 파서 설정
 parser = JsonOutputParser(pydantic_object=RecommendationsOutput)
 
-# 프롬프트 템플릿
+# 프롬프트 템플릿 (토큰 최적화)
 prompt = PromptTemplate(
-    template="""You are a professional travel consultant.
-    Recommend 3 travel destinations based on the following user preferences and research data:
-    
-    [User Preferences]
-    {user_input}
-    
-    [Research Data (Trends & Safety)]
-    {research_data}
-    
-    Important Constraints:
-    1. **RESPECT THE PREFERRED DESTINATION**: If the user has specified a 'preferredDestination' (e.g., 'Tokyo') in the preferences:
-       - You MUST ONLY recommend destinations that are either the specified city itself or very close variations (e.g., 'Tokyo City Center', 'Tokyo & Yokohama', 'Tokyo & Hakone').
-       - DO NOT recommend completely different countries or cities (e.g., if user says 'Tokyo', do NOT recommend 'Seoul' or 'Paris').
-       - Provide 3 distinct options focused on that specific destination (e.g., different themes like 'Foodie Trip', 'Cultural Exploration', 'Relaxing Getaway' within the same city).
-    
-    2. **DURATION CHECK**: 
-       - If the trip duration is short (e.g., 3-4 days), focus on a single city or immediate surroundings. Do not suggest multi-city hops that require long travel times.
-       - If the trip duration is long (e.g., 7+ days), you may suggest multi-city itineraries (e.g., 'Tokyo & Kyoto').
-    
-    3. **General Rules**:
-       - For multi-city trips, set 'destination' as the route name (e.g., "London & Paris").
-       - Use the research data to recommend trending or safe spots within the constraints.
-    
-    Return the result strictly in the following JSON format.
-    {format_instructions}
-    
-    Ensure all text fields are in Korean.
-    IMPORTANT: Output ONLY the JSON object. Do not use markdown code blocks (e.g., ```json). Do not add any introductory or concluding text.
-    """,
+    template="""Recommend 3 travel destinations based on user preferences and research data.
+
+[User Preferences]
+{user_input}
+
+[Research Data]
+{research_data}
+
+Constraints:
+1. If 'preferredDestination' specified: ONLY recommend that city or close variations (e.g., Tokyo → Tokyo City Center, Tokyo & Yokohama)
+2. Short trips (3-4 days): Single city. Long trips (7+ days): Multi-city OK
+3. Multi-city format: "City1 & City2"
+
+All text in Korean. Output ONLY valid JSON, no markdown.
+
+{format_instructions}""",
     input_variables=["user_input", "research_data"],
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )

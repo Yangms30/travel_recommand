@@ -1,4 +1,5 @@
 import os
+import asyncio
 import requests
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
@@ -7,7 +8,8 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilySearch
+from langchain_google_community import GooglePlacesTool
 
 load_dotenv()
 
@@ -17,10 +19,16 @@ class ItineraryActivity(BaseModel):
     activity: str = Field(description="활동 명")
     description: str = Field(description="활동 설명")
 
+class Meal(BaseModel):
+    name: str = Field(description="식당 이름")
+    description: str = Field(description="식당 설명 및 추천 메뉴")
+    google_maps_link: str = Field(description="Google Maps 링크 (실제 URL 또는 검색 링크)")
+
 class ItineraryDay(BaseModel):
     day: int = Field(description="일차 (1, 2, 3...)")
     theme: str = Field(description="그 날의 테마")
     activities: List[ItineraryActivity]
+    meals: List[Meal] = Field(description="점심, 저녁 식사 추천")
 
 class Attraction(BaseModel):
     name: str = Field(description="명소 이름")
@@ -40,56 +48,29 @@ class ItineraryState(TypedDict):
     attractions: List[dict]
 
 # LLM 설정
-llm = ChatOpenAI(model="gpt-5", temperature=0.7)
+llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
 
 # 도구 설정
-tavily_tool = TavilySearchResults(max_results=5)
+tavily_tool = TavilySearch(max_results=2)
 
 # 파서 설정
 parser = JsonOutputParser(pydantic_object=ItineraryOutput)
 
-# 프롬프트 템플릿
+# 프롬프트 템플릿 (토큰 최적화)
 prompt = PromptTemplate(
-    template="""You are a professional travel planner.
-    Create a detailed daily itinerary for a trip to {destination}.
-    Also, recommend 3-4 must-visit attractions in {destination} with brief descriptions.
-    
-    Consider the following preferences:
-    {preferences}
-    
-    Use the following research data to ensure accuracy (opening hours, popular spots, events):
-    {research_data}
-    
-    Return the result strictly in the following JSON format.
-    {format_instructions}
-    
-    Example format:
-    {{
-        "itinerary": [
-            {{
-                "day": 1,
-                "theme": "Arrival and Exploration",
-                "activities": [
-                    {{
-                        "time": "10:00 AM",
-                        "activity": "Check-in",
-                        "description": "Arrive at hotel"
-                    }}
-                ]
-            }}
-        ],
-        "attractions": [
-            {{
-                "name": "Eiffel Tower",
-                "description": "Iconic landmark",
-                "imageUrl": ""
-            }}
-        ]
-    }}
-    
-    Ensure all text fields are in Korean.
-    IMPORTANT: Output ONLY the JSON object. Do not use markdown code blocks (e.g., ```json). Do not add any introductory or concluding text.
-    """,
+    template="""Create a detailed daily itinerary for {destination}.
+
+Preferences: {preferences}
+
+Research data: {research_data}
+
+Requirements:
+- Recommend 3-4 must-visit attractions with brief descriptions
+- For each day, suggest lunch and dinner spots with Google Maps links (format: https://www.google.com/maps/search/?api=1&query={{Name}}+{{City}})
+- All text in Korean
+- Output ONLY valid JSON, no markdown blocks
+
+{format_instructions}""",
     input_variables=["destination", "preferences", "research_data"],
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )
@@ -116,28 +97,60 @@ def fetch_image(query: str, context: str = "") -> str:
     return f"https://picsum.photos/seed/{query}/800/600"
 
 # 노드 함수 정의
-def research_activities(state: ItineraryState):
+async def research_activities(state: ItineraryState):
     destination = state["destination"]
-    # 여행지 관련 주요 정보 검색
-    query = f"must visit places and events in {destination} travel guide"
     
-    try:
-        results = tavily_tool.invoke({"query": query})
-        research_summary = "\n".join([f"- {r['content']}" for r in results])
-    except Exception as e:
-        print(f"Error researching activities: {e}")
-        research_summary = "No research data available."
-        
-    return {"research_data": research_summary}
+    async def fetch_tavily():
+        try:
+            tavily_query = f"must visit places and events in {destination} travel guide"
+            tavily_results = await tavily_tool.ainvoke({"query": tavily_query})
+            return ["[General Info]"] + [f"- {r['content']}" for r in tavily_results]
+        except Exception as e:
+            print(f"Error researching activities with Tavily: {e}")
+            return []
 
-def generate_itinerary(state: ItineraryState):
+    async def fetch_places():
+        try:
+            places_tool = GooglePlacesTool()
+            places_query = f"popular restaurants in {destination}"
+            places_results = await places_tool.ainvoke(places_query)
+            return ["\n[Restaurant Info]", places_results]
+        except Exception as e:
+            print(f"Error researching restaurants with Google Places: {e}")
+            # Fallback to Tavily
+            try:
+                fallback_query = f"best restaurants in {destination} with google maps links"
+                fallback_results = await tavily_tool.ainvoke({"query": fallback_query})
+                return ["\n[Restaurant Info (Fallback)]"] + [f"- {r['content']}" for r in fallback_results]
+            except Exception as inner_e:
+                 print(f"Error researching restaurants with fallback: {inner_e}")
+                 return []
+
+    # Execute in parallel
+    results = await asyncio.gather(fetch_tavily(), fetch_places())
+    
+    flat_results = []
+    for r in results:
+        flat_results.extend(r)
+
+    # 토큰 절감: Research 데이터 요약 (각 항목을 150자로 제한)
+    summarized_results = []
+    for item in flat_results:
+        if len(item) > 150:
+            summarized_results.append(item[:150] + "...")
+        else:
+            summarized_results.append(item)
+
+    return {"research_data": "\n".join(summarized_results)}
+
+async def generate_itinerary(state: ItineraryState):
     destination = state["destination"]
     preferences = state["preferences"]
     research_data = state.get("research_data", "")
     
     chain = prompt | llm | parser
     try:
-        response = chain.invoke({
+        response = await chain.ainvoke({
             "destination": destination, 
             "preferences": preferences,
             "research_data": research_data

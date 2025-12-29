@@ -2,37 +2,52 @@ import React, { useEffect, useState } from 'react';
 
 export const LoadingScreen: React.FC = () => {
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState("여행 스타일 분석 및 매칭 중...");
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  const loadingMessages = [
+    "여행지 정보를 꼼꼼히 살피는 중...",
+    "현지인만 아는 맛집을 찾는 중...",
+    "최적의 이동 경로를 계산하는 중...",
+    "날씨 정보를 확인하는 중...",
+    "당신만을 위한 특별한 일정을 만드는 중...",
+    "숨겨진 명소를 탐색하는 중..."
+  ];
+
+  const travelTips = [
+    "비행기 티켓은 출발 6주 전에 예매하면 평균적으로 가장 저렴하다는 사실, 알고 계셨나요?",
+    "현지 시장을 방문하면 그 나라의 진짜 문화를 경험할 수 있어요.",
+    "여행자 보험은 선택이 아닌 필수! 혹시 모를 상황에 대비하세요.",
+    "구글 맵 오프라인 지도를 미리 다운로드하면 데이터 없이도 길을 찾을 수 있어요.",
+    "현지 언어로 '안녕하세요', '감사합니다' 정도는 익혀두면 좋아요."
+  ];
 
   useEffect(() => {
-    // Simulate loading progress
-    const duration = 5000; // 5 seconds total
-    const intervalTime = 50;
-    const steps = duration / intervalTime;
-    let currentStep = 0;
-
+    // Progress Bar Logic: 90%까지는 빠르게, 그 이후는 천천히
     const timer = setInterval(() => {
-      currentStep++;
-      const newProgress = Math.min(100, Math.floor((currentStep / steps) * 100));
-      setProgress(newProgress);
+      setProgress((prev) => {
+        if (prev >= 90) {
+          return prev < 99 ? prev + 0.1 : 99;
+        }
+        return prev + (Math.random() * 2); // Random increment for natural feel
+      });
+    }, 150);
 
-      // Update status text based on progress
-      if (newProgress < 30) {
-        setStatusText("여행 스타일 분석 및 매칭 중...");
-      } else if (newProgress < 60) {
-        setStatusText("항공권 및 현지 숙소 데이터 검색 중...");
-      } else if (newProgress < 85) {
-        setStatusText("최적의 이동 경로 계산 중...");
-      } else {
-        setStatusText("여행 일정 최종 정리 중...");
-      }
+    // Message Rotation
+    const messageTimer = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 3000);
 
-      if (currentStep >= steps) {
-        clearInterval(timer);
-      }
-    }, intervalTime);
+    // Tip Rotation
+    const tipTimer = setInterval(() => {
+      setCurrentTipIndex((prev) => (prev + 1) % travelTips.length);
+    }, 6000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearInterval(messageTimer);
+      clearInterval(tipTimer);
+    };
   }, []);
 
   return (
@@ -81,7 +96,7 @@ export const LoadingScreen: React.FC = () => {
               <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">현재 진행 상황</p>
               <p className="text-slate-900 text-base font-semibold leading-normal flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-sm animate-spin">auto_awesome</span>
-                {statusText}
+                {loadingMessages[currentMessageIndex]}
               </p>
             </div>
             <p className="text-primary text-xl font-bold leading-normal">{progress}%</p>
@@ -100,6 +115,15 @@ export const LoadingScreen: React.FC = () => {
               ></div>
             </div>
           </div>
+          </div>
+
+
+        {/* Long Itinerary Notice */}
+        <div className="mt-6 text-center px-4 animate-fade-in">
+          <p className="text-xs text-slate-400 flex items-center justify-center gap-1.5 bg-slate-50 py-2 px-4 rounded-full inline-flex border border-slate-100">
+            <span className="material-symbols-outlined text-sm text-slate-400">info</span>
+            여행 기간이 길수록 더 꼼꼼한 계획을 위해 시간이 조금 더 소요될 수 있습니다.
+          </p>
         </div>
 
         {/* Tip Card */}
@@ -111,7 +135,7 @@ export const LoadingScreen: React.FC = () => {
             <div>
               <h4 className="text-sm font-bold text-slate-900 mb-1">여행 꿀팁</h4>
               <p className="text-sm text-slate-600 leading-relaxed">
-                비행기 티켓은 출발 6주 전에 예매하면 평균적으로 가장 저렴하다는 사실, 알고 계셨나요? AI가 최적의 가격대도 함께 확인해 드립니다.
+                {travelTips[currentTipIndex]}
               </p>
             </div>
           </div>
