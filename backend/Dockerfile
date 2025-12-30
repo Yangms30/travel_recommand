@@ -16,11 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY . .
 
-# 포트 노출
-EXPOSE 8000
-
 # 환경 변수 설정
 ENV PYTHONUNBUFFERED=1
 
-# Uvicorn으로 FastAPI 실행
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Cloud Run은 PORT 환경 변수를 제공하므로 이를 사용
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}

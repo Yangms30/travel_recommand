@@ -12,8 +12,9 @@ app = FastAPI(title="Travel Recommendation AI Backend")
 
 # CORS 설정
 origins = [
+    "https://travel-recommand.vercel.app",  # Vercel 배포 도메인
     "http://localhost:5173",  # Vite 기본 포트
-    "http://localhost:3000",  # React 기본 포트 (혹시 모를 대비)
+    "http://localhost:3000",  # React 기본 포트
 ]
 
 app.add_middleware(
@@ -32,4 +33,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
