@@ -7,7 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_tavily import TavilySearch
+from tavily import TavilyClient
 
 load_dotenv()
 
@@ -36,7 +36,7 @@ class DestinationState(TypedDict):
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
 
 # 도구 설정
-tavily_tool = TavilySearch(max_results=2)
+tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 # 파서 설정
 parser = JsonOutputParser(pydantic_object=RecommendationsOutput)
@@ -137,7 +137,8 @@ def research_destinations(state: DestinationState):
     query = f"best travel destinations for {user_input.get('travelers', 'travelers')} in {user_input.get('startDate', 'upcoming months')} style {user_input.get('travelStyles', 'general')}"
     
     try:
-        results = tavily_tool.invoke({"query": query})
+        response = tavily_client.search(query, max_results=2)
+        results = response.get("results", [])
         # 결과 요약
         research_summary = "\n".join([f"- {r['content']}" for r in results])
     except Exception as e:

@@ -8,7 +8,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_tavily import TavilySearch
+from tavily import TavilyClient
 from langchain_google_community import GooglePlacesTool
 
 load_dotenv()
@@ -51,7 +51,7 @@ class ItineraryState(TypedDict):
 llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
 
 # 도구 설정
-tavily_tool = TavilySearch(max_results=2)
+tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 # 파서 설정
 parser = JsonOutputParser(pydantic_object=ItineraryOutput)
@@ -109,7 +109,8 @@ async def research_activities(state: ItineraryState):
     async def fetch_tavily():
         try:
             tavily_query = f"must visit places and events in {destination} travel guide"
-            tavily_results = await tavily_tool.ainvoke({"query": tavily_query})
+            response = tavily_client.search(tavily_query, max_results=2)
+            tavily_results = response.get('results', [])
             return ["[General Info]"] + [f"- {r['content']}" for r in tavily_results]
         except Exception as e:
             print(f"Error researching activities with Tavily: {e}")
@@ -126,7 +127,8 @@ async def research_activities(state: ItineraryState):
             # Fallback to Tavily
             try:
                 fallback_query = f"best restaurants in {destination} with google maps links"
-                fallback_results = await tavily_tool.ainvoke({"query": fallback_query})
+                fallback_response = tavily_client.search(fallback_query, max_results=2)
+                fallback_results = fallback_response.get('results', [])
                 return ["\n[Restaurant Info (Fallback)]"] + [f"- {r['content']}" for r in fallback_results]
             except Exception as inner_e:
                  print(f"Error researching restaurants with fallback: {inner_e}")

@@ -11,9 +11,8 @@ langchain-community==0.4.1
 langchain-google-community==3.0.2
 langgraph==1.0.5
 
-# Search & Tools
+# Search & Tools (tavily-python만 사용, langchain-tavily 제거)
 tavily-python==0.7.12
-langchain-tavily==0.2.1
 
 # HTTP & Requests
 requests==2.32.5
