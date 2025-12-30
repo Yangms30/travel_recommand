@@ -19,5 +19,6 @@ COPY . .
 # 환경 변수 설정
 ENV PYTHONUNBUFFERED=1
 
-# Cloud Run은 PORT 환경 변수를 제공하므로 이를 사용
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}
+# Cloud Run/Railway는 PORT 환경 변수를 제공하므로 이를 사용
+# 쉘 형식으로 변경하여 환경 변수 치환 가능
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
