@@ -161,8 +161,12 @@ const App: React.FC = () => {
             <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm text-slate-500 hover:text-primary">개인정보 처리방침</button>
             <button onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })} className="text-sm text-slate-500 hover:text-primary">고객센터</button>
           </div>
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-slate-400 text-center md:text-right">
              © 2024 TripAI. All rights reserved.
+             <br />
+             <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-300 hover:text-slate-400 transition-colors">
+               Photos from Unsplash
+             </a>
           </div>
         </div>
       </footer>
