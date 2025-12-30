@@ -99,7 +99,7 @@ export const LoadingScreen: React.FC = () => {
                 {loadingMessages[currentMessageIndex]}
               </p>
             </div>
-            <p className="text-primary text-xl font-bold leading-normal">{progress}%</p>
+            <p className="text-primary text-xl font-bold leading-normal">{Math.round(progress)}%</p>
           </div>
           <div className="rounded-full bg-slate-100 h-3 overflow-hidden">
             <div 

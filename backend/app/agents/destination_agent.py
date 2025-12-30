@@ -76,21 +76,28 @@ def fetch_destination_image(destination: str) -> str:
     access_key = os.getenv("UNSPLASH_ACCESS_KEY")
     query_city = get_primary_city(destination)
     
-    # 검색어 구체화: "Tokyo travel landmark" 등으로 검색하여 인물 사진 제외
-    search_query = f"{query_city} travel landmark scenery"
-    
     if not access_key:
         return f"https://picsum.photos/seed/{query_city}/800/600"
     
-    url = f"https://api.unsplash.com/search/photos?query={search_query}&per_page=1&client_id={access_key}&orientation=landscape"
-    try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            if data['results']:
-                return data['results'][0]['urls']['regular']
-    except Exception as e:
-        print(f"Error fetching image for {destination}: {e}")
+    # 다중 검색 전략: 구체적인 쿼리부터 시도
+    search_queries = [
+        f"{query_city} skyline cityscape",  # 도시 스카이라인
+        f"{query_city} famous landmark architecture",  # 유명 랜드마크
+        f"{query_city} travel destination",  # 여행지
+    ]
+    
+    for search_query in search_queries:
+        url = f"https://api.unsplash.com/search/photos?query={search_query}&per_page=3&client_id={access_key}&orientation=landscape"
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data['results']:
+                    # 첫 번째 결과 반환 (가장 관련성 높음)
+                    return data['results'][0]['urls']['regular']
+        except Exception as e:
+            print(f"Error fetching image for {destination} with query '{search_query}': {e}")
+            continue
     
     return f"https://picsum.photos/seed/{query_city}/800/600"
 

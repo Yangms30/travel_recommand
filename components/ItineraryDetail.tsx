@@ -39,6 +39,7 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
   const duration = calculateDuration();
 
   const [currentAttractionIndex, setCurrentAttractionIndex] = React.useState(0);
+  const [showFullItinerary, setShowFullItinerary] = React.useState(false);
 
   const nextAttraction = () => {
     if (!trip.attractions) return;
@@ -284,16 +285,21 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
         <div className="flex flex-col gap-4 mt-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900">일정 요약</h2>
-            <button 
-              onClick={() => toast('서비스 개발 중입니다.', { icon: '🚧' })}
-              className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
-            >
-              전체 일정 보기 <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
+            {trip.itinerary.length > 3 && (
+              <button 
+                onClick={() => setShowFullItinerary(!showFullItinerary)}
+                className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
+              >
+                {showFullItinerary ? '요약 보기' : '전체 일정 보기'} 
+                <span className="material-symbols-outlined text-sm">
+                  {showFullItinerary ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+            )}
           </div>
           
           <div className="relative pl-4 border-l-2 border-slate-200 space-y-8 py-2">
-            {trip.itinerary.map((day, index) => {
+            {(showFullItinerary ? trip.itinerary : trip.itinerary.slice(0, 3)).map((day, index) => {
               // Calculate specific date for this day
               const date = new Date(prefs.startDate);
               date.setDate(date.getDate() + (day.day - 1));
@@ -352,6 +358,14 @@ export const ItineraryDetail: React.FC<Props> = ({ trip, prefs, onBack }) => {
                 </div>
               );
             })}
+            
+            {!showFullItinerary && trip.itinerary.length > 3 && (
+              <div className="text-center py-4">
+                <p className="text-sm text-slate-500">
+                  {trip.itinerary.length - 3}일의 일정이 더 있습니다
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

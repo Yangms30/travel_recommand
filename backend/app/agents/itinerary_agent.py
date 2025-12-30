@@ -78,21 +78,27 @@ Requirements:
 def fetch_image(query: str, context: str = "") -> str:
     access_key = os.getenv("UNSPLASH_ACCESS_KEY")
     
-    # 검색어 구체화: "{명소} {도시} landmark"
-    search_query = f"{query} {context} landmark".strip()
-    
     if not access_key:
         return f"https://picsum.photos/seed/{query}/800/600"
     
-    url = f"https://api.unsplash.com/search/photos?query={search_query}&per_page=1&client_id={access_key}&orientation=landscape"
-    try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            if data['results']:
-                return data['results'][0]['urls']['regular']
-    except Exception as e:
-        print(f"Error fetching image for {query}: {e}")
+    # 명소 이미지 검색: 다중 검색 전략
+    search_queries = [
+        f"{query} {context} landmark architecture",  # 명소 + 도시 + 건축물
+        f"{query} famous tourist attraction",  # 유명 관광 명소
+        f"{query} {context}",  # 명소 + 도시
+    ]
+    
+    for search_query in search_queries:
+        url = f"https://api.unsplash.com/search/photos?query={search_query.strip()}&per_page=3&client_id={access_key}&orientation=landscape"
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data['results']:
+                    return data['results'][0]['urls']['regular']
+        except Exception as e:
+            print(f"Error fetching image for {query} with query '{search_query}': {e}")
+            continue
     
     return f"https://picsum.photos/seed/{query}/800/600"
 
