@@ -12,14 +12,18 @@ app = FastAPI(title="Travel Recommendation AI Backend")
 
 # CORS 설정
 origins = [
-    "https://travel-recommand.vercel.app",  # Vercel 배포 도메인
+    "https://travel-recommand.vercel.app",  # Vercel 프로덕션 도메인
     "http://localhost:5173",  # Vite 기본 포트
     "http://localhost:3000",  # React 기본 포트
 ]
 
+# Vercel 프리뷰 도메인 패턴 허용
+allow_origin_regex = r"https://travel-recommand-.*\.vercel\.app"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
