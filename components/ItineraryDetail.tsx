@@ -1,6 +1,7 @@
 import React from 'react';
 import { TripRecommendation, TravelPreferences } from '../types';
 import toast from 'react-hot-toast';
+import { AffiliateLinks } from './AffiliateLinks';
 
 interface Props {
   trip: TripRecommendation;

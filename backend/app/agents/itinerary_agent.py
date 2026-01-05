@@ -42,6 +42,7 @@ class ItineraryOutput(BaseModel):
 # 상태 정의
 class ItineraryState(TypedDict):
     destination: str
+    duration: str
     preferences: str
     research_data: str
     itinerary: List[dict]
@@ -60,18 +61,23 @@ parser = JsonOutputParser(pydantic_object=ItineraryOutput)
 prompt = PromptTemplate(
     template="""Create a detailed daily itinerary for {destination}.
 
+Duration: {duration}
 Preferences: {preferences}
 
 Research data: {research_data}
 
-Requirements:
+CRITICAL REQUIREMENTS:
+- You MUST create a complete itinerary for ALL {duration} days
+- Create exactly {duration} day entries in the itinerary array
+- Number each day from 1 to {duration}
+- Each day must have activities and meal recommendations
 - Recommend 3-4 must-visit attractions with brief descriptions
 - For each day, suggest lunch and dinner spots with Google Maps links (format: https://www.google.com/maps/search/?api=1&query={{Name}}+{{City}})
 - All text in Korean
 - Output ONLY valid JSON, no markdown blocks
 
 {format_instructions}""",
-    input_variables=["destination", "preferences", "research_data"],
+    input_variables=["destination", "duration", "preferences", "research_data"],
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )
 
@@ -153,13 +159,15 @@ async def research_activities(state: ItineraryState):
 
 async def generate_itinerary(state: ItineraryState):
     destination = state["destination"]
+    duration = state["duration"]
     preferences = state["preferences"]
     research_data = state.get("research_data", "")
     
     chain = prompt | llm | parser
     try:
         response = await chain.ainvoke({
-            "destination": destination, 
+            "destination": destination,
+            "duration": duration,
             "preferences": preferences,
             "research_data": research_data
         })

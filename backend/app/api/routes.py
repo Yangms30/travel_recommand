@@ -18,7 +18,11 @@ async def recommend_destinations(request: TravelRequest):
 async def recommend_itinerary(request: ItineraryRequest):
     try:
         # LangGraph 실행 (invoke)
-        result = await itinerary_graph.ainvoke({"destination": request.destination, "preferences": request.preferences})
+        result = await itinerary_graph.ainvoke({
+            "destination": request.destination, 
+            "duration": request.duration,
+            "preferences": request.preferences
+        })
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
